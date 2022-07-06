@@ -36,6 +36,11 @@ fn main() {
     let mut direction = Direction::Right;
     let mut cursor = Position::default();
 
+    // The cursor will walk X steps, turn left, walk again X steps, turn left,
+    // walk X + 1 steps, turn left, walk X + 1 steps, turn left, walk X + 2
+    // steps, etc.
+    // We can easily do this with nested loops, but breaking out requires a
+    // label (which I had never used before!).
     'outer: loop {
         for _ in 0..steps {
             cursor = cursor + direction;
