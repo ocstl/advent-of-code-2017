@@ -5,8 +5,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let spreadsheet = input
         .lines()
         .map(|line| {
-            line.trim()
-                .split_whitespace()
+            line.split_whitespace()
                 .map(|n| n.parse::<u32>())
                 .collect::<Result<Vec<u32>, _>>()
         })
