@@ -1,3 +1,4 @@
+use std::cell::Cell;
 use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
 
@@ -10,19 +11,26 @@ struct Program {
     name: String,
     weight: i32,
     subprograms: Vec<String>,
+    total_weight: Cell<Option<i32>>,
 }
 
 impl Program {
     fn get_total_weight(&self, programs: &Programs) -> i32 {
-        self.weight
-            + self
-                .subprograms
-                .iter()
-                .map(|sub| programs.get(sub).unwrap().get_total_weight(programs))
-                .sum::<i32>()
+        if self.total_weight.get().is_none() {
+            self.total_weight.set(Some(
+                self.weight
+                    + self
+                        .subprograms
+                        .iter()
+                        .map(|sub| programs.get(sub).unwrap().get_total_weight(programs))
+                        .sum::<i32>(),
+            ));
+        }
+
+        self.total_weight.get().unwrap()
     }
 
-    fn unbalanced<'a>(&'a self, programs: &'a Programs) -> Option<(&'a Program, i32)> {
+    fn unbalanced_subprogram<'a>(&'a self, programs: &'a Programs) -> Option<(&'a Program, i32)> {
         let mut weights: HashMap<i32, Vec<&Program>> = HashMap::new();
         for sub in self.subprograms.iter() {
             let sub = programs.get(sub).unwrap();
@@ -48,37 +56,29 @@ impl FromStr for Program {
     type Err = ();
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let s = s.trim();
+        let mut s = s.trim().split(" -> ");
+        let mut left = s.next().unwrap().split_whitespace();
+        let name = left.next().unwrap().trim().to_string();
+        let weight = left
+            .next()
+            .unwrap()
+            .chars()
+            .filter(char::is_ascii_digit)
+            .collect::<String>()
+            .parse::<i32>()
+            .unwrap();
 
-        // Depends if it holds subprograms or not.
-        if let Some((program, subs)) = s.split_once(" -> ") {
-            let name = program.chars().filter(char::is_ascii_alphabetic).collect();
-            let weight = program
-                .chars()
-                .filter(char::is_ascii_digit)
-                .collect::<String>()
-                .parse()
-                .unwrap();
-            let subprograms = subs.split(',').map(|sub| sub.trim().to_string()).collect();
-            Ok(Program {
-                name,
-                weight,
-                subprograms,
-            })
-        } else {
-            let name = s.chars().filter(char::is_ascii_alphabetic).collect();
-            let weight = s
-                .chars()
-                .filter(char::is_ascii_digit)
-                .collect::<String>()
-                .parse()
-                .unwrap();
-            Ok(Program {
-                name,
-                weight,
-                subprograms: Vec::new(),
-            })
-        }
+        let subprograms = s
+            .next()
+            .map(|right| right.split(',').map(|sub| sub.trim().to_string()).collect())
+            .unwrap_or_default();
+
+        Ok(Program {
+            name,
+            weight,
+            subprograms,
+            total_weight: Cell::new(None),
+        })
     }
 }
 
@@ -111,11 +111,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // The unbalanced part starts at the top (part 1). We can walk down the
     // subprograms until we no longer find unbalanced subprograms, at which
     // point we know which program needs its weight adjusted.
-    // It would make sense to cache the results of the total weight calculation,
-    // but mutability becomes tricky.
     let mut current = programs.get(part1).unwrap();
     let mut offset = 0;
-    while let Some((program, diff)) = current.unbalanced(&programs) {
+    while let Some((program, diff)) = current.unbalanced_subprogram(&programs) {
         current = program;
         offset = diff;
     }
