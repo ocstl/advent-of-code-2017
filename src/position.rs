@@ -21,6 +21,15 @@ impl Position {
             Position::new(self.x + 1, self.y + 1),
         ]
     }
+
+    pub fn adjacent(self) -> [Position; 4] {
+        [
+            Position::new(self.x - 1, self.y),
+            Position::new(self.x + 1, self.y),
+            Position::new(self.x, self.y - 1),
+            Position::new(self.x, self.y + 1),
+        ]
+    }
 }
 
 impl std::ops::Add<Direction> for Position {
