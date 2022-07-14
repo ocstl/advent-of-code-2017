@@ -3,6 +3,7 @@ const FACTOR_A: u64 = 16807;
 const FACTOR_B: u64 = 48271;
 const FILTER_A: u64 = 4;
 const FILTER_B: u64 = 8;
+const MASK: u64 = 0xffff;
 
 #[derive(Debug, Default, Clone, Copy)]
 struct Generator {
@@ -49,7 +50,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let part1 = generator_a
         .zip(generator_b)
         .take(40_000_000)
-        .filter(|(a, b)| a & 0xffff == b & 0xffff)
+        .filter(|(a, b)| a & MASK == b & MASK)
         .count();
     println!("Part 1: {}", part1);
 
@@ -59,7 +60,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .filter(|a| a % FILTER_A == 0)
         .zip(generator_b.filter(|b| b % FILTER_B == 0))
         .take(5_000_000)
-        .filter(|(a, b)| a & 0xffff == b & 0xffff)
+        .filter(|(a, b)| a & MASK == b & MASK)
         .count();
     println!("Part 2: {}", part2);
 
