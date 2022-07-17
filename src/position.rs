@@ -5,7 +5,7 @@ pub struct Position {
 }
 
 impl Position {
-    pub fn new(x: isize, y: isize) -> Self {
+    pub const fn new(x: isize, y: isize) -> Self {
         Position { x, y }
     }
 
@@ -69,6 +69,15 @@ impl Direction {
             Direction::Down => Direction::Left,
             Direction::Left => Direction::Up,
             Direction::Right => Direction::Down,
+        }
+    }
+
+    pub fn reverse(self) -> Self {
+        match self {
+            Direction::Up => Direction::Down,
+            Direction::Down => Direction::Up,
+            Direction::Left => Direction::Right,
+            Direction::Right => Direction::Left,
         }
     }
 }
